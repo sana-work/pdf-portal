@@ -1,0 +1,18 @@
+{
+  "home": { "title": "Home Page", "file": "input_pdfs/PDF1.pdf" },
+  "sections": [
+    { "title": "Sec 1", "file": "input_pdfs/PDF2.pdf", "children": [
+      { "title": "Sec 1.1", "file": "input_pdfs/PDF3.pdf" }
+    ]},
+    { "title": "Sec 2", "file": "input_pdfs/PDF4.pdf", "children": [
+      { "title": "Sec 2.1", "file": "input_pdfs/PDF5.pdf" },
+      { "title": "Sec 2.2", "file": "input_pdfs/PDF6.pdf" }
+    ]},
+    { "title": "Sec 3", "file": "input_pdfs/PDF7.pdf", "children": [
+      { "title": "Sec 3.1", "file": "input_pdfs/PDF8.pdf" }
+    ]},
+    { "title": "Sec 4", "file": "input_pdfs/PDF9.pdf", "children": [
+      { "title": "Sec 4.1", "file": "input_pdfs/PDF10.pdf" }
+    ]}
+  ]
+}
