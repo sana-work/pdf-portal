@@ -1,0 +1,10 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# PDFs (optional - comment out if you WANT to commit PDFs)
+input_pdfs/*.pdf
+*.pdf
+
+# local server / misc
+*.log
