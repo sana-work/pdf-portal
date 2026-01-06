@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF Portal</title>
+  <style>
+    :root{
+      --bg:#0b0f17; --panel:rgba(255,255,255,.06); --panel2:rgba(255,255,255,.09);
+      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.65); --border:rgba(255,255,255,.12);
+      --accent:#7dd3fc; --shadow:0 12px 40px rgba(0,0,0,.35); --r:16px;
+    }
+    [data-theme="light"]{
+      --bg:#f6f7fb; --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+      --text:rgba(0,0,0,.9); --muted:rgba(0,0,0,.6); --border:rgba(0,0,0,.12);
+      --accent:#0369a1; --shadow:0 12px 40px rgba(0,0,0,.10);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; overflow:hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 30% 10%, rgba(125,211,252,.12), transparent 60%),
+                  radial-gradient(1200px 800px at 80% 70%, rgba(167,139,250,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .app{height:100%; display:grid; grid-template-columns: 360px 8px 1fr; padding:14px; gap:0;}
+    .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; min-height:0;}
+    .sidebar{display:flex; flex-direction:column; min-width:260px;}
+    .top{padding:14px; border-bottom:1px solid var(--border); background:linear-gradient(to bottom, var(--panel2), transparent);}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .brand{display:flex; align-items:center; gap:10px; min-width:0;}
+    .logo{width:34px; height:34px; border-radius:12px; background:linear-gradient(135deg, rgba(125,211,252,.8), rgba(167,139,250,.7)); box-shadow:0 10px 25px rgba(0,0,0,.25);}
+    .brand b{display:block; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .brand span{display:block; font-size:12px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .btn{
+      border:1px solid var(--border); background:transparent; color:var(--text);
+      border-radius:12px; padding:8px 10px; cursor:pointer; font-size:12px;
+      transition:transform .12s ease, background .12s ease;
+    }
+    .btn:hover{background:var(--panel2); transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .search{margin-top:10px; width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background:rgba(0,0,0,.08); color:var(--text); outline:none; font-size:13px;}
+    [data-theme="light"] .search{background:rgba(255,255,255,.85);}
+    .search::placeholder{color:var(--muted)}
+    .controls{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+    .nav{padding:10px; overflow:auto; min-height:0;}
+    details{border-radius:14px; margin:6px 0;}
+    summary{list-style:none; cursor:pointer; padding:10px; border-radius:14px; color:var(--muted); user-select:none;}
+    summary::-webkit-details-marker{display:none;}
+    details[open] > summary{background:rgba(0,0,0,.06);}
+    .item{
+      margin:4px 0; padding:10px; border-radius:12px; cursor:pointer;
+      border:1px solid transparent; transition:background .12s ease, border .12s ease, transform .12s ease;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .item:hover{background:rgba(0,0,0,.06); border-color:var(--border); transform:translateY(-1px);}
+    .item.active{background:rgba(125,211,252,.12); border-color:rgba(125,211,252,.35);}
+    .meta{min-width:0;}
+    .meta .t{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .meta .s{font-size:12px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .pill{font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); flex:0 0 auto;}
+    .resizer{display:flex; align-items:center; justify-content:center; cursor:col-resize; user-select:none; opacity:.85;}
+    .resizer:before{content:""; width:2px; height:80%; border-radius:999px; background:var(--border);}
+    .viewer{display:flex; flex-direction:column; min-width:0; min-height:0;}
+    .bar{
+      padding:12px 14px; border-bottom:1px solid var(--border);
+      background:linear-gradient(to bottom, var(--panel2), transparent);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .crumbs{min-width:0;}
+    .crumbs b{display:block; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .crumbLine{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+    .crumb{
+      font-size:12px; color:var(--muted); cursor:pointer; border:1px solid var(--border);
+      padding:4px 8px; border-radius:999px; background:transparent;
+    }
+    .crumb:hover{background:var(--panel2); color:var(--text);}
+    .frame{flex:1; min-height:0; background:rgba(0,0,0,.06);}
+    [data-theme="light"] .frame{background:rgba(255,255,255,.6);}
+    iframe{width:100%; height:100%; border:0;}
+    .hint{padding:10px 14px; font-size:12px; color:var(--muted); border-top:1px solid var(--border);}
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size:11px; padding:2px 6px; border-radius:6px; border:1px solid var(--border); background:rgba(0,0,0,.06); color:var(--text);}
+    @media (max-width: 900px){
+      body{overflow:auto}
+      .app{grid-template-columns:1fr;}
+      .resizer{display:none;}
+      .sidebar{height:44vh;}
+      .viewer{height:calc(56vh - 28px); margin-top:14px;}
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="app" id="app">
+    <aside class="card sidebar">
+      <div class="top">
+        <div class="row">
+          <div class="brand">
+            <div class="logo"></div>
+            <div>
+              <b>PDF Portal</b>
+              <span>structure.json driven</span>
+            </div>
+          </div>
+          <button class="btn" id="themeBtn" title="Toggle theme">🌗</button>
+        </div>
+
+        <input class="search" id="search" placeholder="Search…" />
+
+        <div class="controls">
+          <button class="btn" id="expandAllBtn">Expand all</button>
+          <button class="btn" id="collapseAllBtn">Collapse all</button>
+          <button class="btn" id="homeBtn" title="Home (H)">🏠 Home</button>
+        </div>
+      </div>
+
+      <div class="nav" id="nav"></div>
+    </aside>
+
+    <div class="resizer" id="resizer" title="Drag to resize"></div>
+
+    <section class="card viewer">
+      <div class="bar">
+        <div class="crumbs">
+          <b id="currentTitle">—</b>
+          <div class="crumbLine" id="breadcrumb"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" id="openBtn">Open ↗</button>
+          <button class="btn" id="downloadBtn">Download ⬇</button>
+        </div>
+      </div>
+
+      <div class="frame">
+        <iframe id="viewer" src=""></iframe>
+      </div>
+
+      <div class="hint">
+        Shortcuts: <span class="kbd">1</span>–<span class="kbd">9</span> open top-level sections •
+        <span class="kbd">H</span> Home • <span class="kbd">Backspace</span> parent •
+        <span class="kbd">/</span> focus search.
+        Run locally: <span class="kbd">python -m http.server 8000</span> → <span class="kbd">http://localhost:8000</span>
+      </div>
+    </section>
+  </div>
+
+<script>
+  const viewer = document.getElementById("viewer");
+  const nav = document.getElementById("nav");
+  const searchEl = document.getElementById("search");
+  const currentTitleEl = document.getElementById("currentTitle");
+  const breadcrumbEl = document.getElementById("breadcrumb");
+  const openBtn = document.getElementById("openBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const themeBtn = document.getElementById("themeBtn");
+  const homeBtn = document.getElementById("homeBtn");
+  const expandAllBtn = document.getElementById("expandAllBtn");
+  const collapseAllBtn = document.getElementById("collapseAllBtn");
+
+  const LS_LAST = "pdf_portal_last";
+  const LS_THEME = "pdf_portal_theme";
+
+  // Node model: { id, title, file, parentId, children:[] }
+  let nodes = new Map();
+  let rootId = "home";
+  let activeId = null;
+
+  async function loadStructure(){
+    const r = await fetch("structure.json", { cache: "no-store" });
+    if (!r.ok) throw new Error("Missing structure.json (or you are not running a local server).");
+    return await r.json();
+  }
+
+  function buildTreeFromJson(cfg){
+    nodes = new Map();
+
+    function add(node, parentId=null){
+      const id = node.id || ("f:" + (node.file || node.title).toLowerCase());
+      const title = node.title || "Untitled";
+      const file = node.file || "";
+      const n = { id, title, file, parentId, children: [] };
+      nodes.set(id, n);
+
+      if (node.children && Array.isArray(node.children)){
+        for (const ch of node.children){
+          const childId = add(ch, id);
+          n.children.push(nodes.get(childId));
+        }
+      }
+      return id;
+    }
+
+    // Root is always "home"
+    const home = cfg.home || { title: "Home", file: "" };
+    add({ id:"home", title: home.title, file: home.file, children: cfg.sections || [] }, null);
+    rootId = "home";
+  }
+
+  function setTheme(theme){
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem(LS_THEME, theme);
+  }
+
+  function setActive(id){
+    const n = nodes.get(id);
+    if (!n) return;
+    activeId = id;
+
+    viewer.src = n.file;
+    currentTitleEl.textContent = n.title;
+
+    // Breadcrumbs with clickable parents
+    breadcrumbEl.innerHTML = "";
+    const chain = [];
+    let cur = n;
+    while(cur){
+      chain.push(cur);
+      cur = cur.parentId ? nodes.get(cur.parentId) : null;
+    }
+    chain.reverse().forEach((node, idx)=>{
+      const btn = document.createElement("button");
+      btn.className = "crumb";
+      btn.textContent = node.title;
+      btn.title = node.file;
+      btn.onclick = () => setActive(node.id);
+      breadcrumbEl.appendChild(btn);
+      if (idx < chain.length - 1){
+        const sep = document.createElement("span");
+        sep.textContent = "›";
+        sep.style.color = "var(--muted)";
+        sep.style.padding = "2px 2px";
+        breadcrumbEl.appendChild(sep);
+      }
+    });
+
+    openBtn.onclick = () => window.open(n.file, "_blank");
+    downloadBtn.onclick = () => {
+      const a = document.createElement("a");
+      a.href = n.file;
+      a.download = n.file;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+
+    document.querySelectorAll(".item").forEach(el => el.classList.remove("active"));
+    const el = document.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    if (el) el.classList.add("active");
+
+    localStorage.setItem(LS_LAST, id);
+  }
+
+  function renderTree(){
+    const q = searchEl.value.trim().toLowerCase();
+    const visible = new Set();
+
+    if (q){
+      for (const n of nodes.values()){
+        const hay = `${n.title} ${n.file}`.toLowerCase();
+        if (hay.includes(q)){
+          let cur = n;
+          while(cur){
+            visible.add(cur.id);
+            cur = cur.parentId ? nodes.get(cur.parentId) : null;
+          }
+        }
+      }
+    }
+
+    function nodeHtml(node, depth=0){
+      const show = !q || visible.has(node.id);
+      if (!show) return "";
+
+      const hasKids = node.children && node.children.length;
+
+      if (node.id === rootId){
+        return `
+          <details open>
+            <summary>Navigation</summary>
+            <div style="padding:0 8px 8px 8px;">
+              ${itemRow(node, 0, true)}
+              ${node.children.map(ch => nodeHtml(ch, 1)).join("")}
+            </div>
+          </details>
+        `;
+      }
+
+      if (hasKids){
+        const open = q ? "open" : "";
+        return `
+          <details ${open}>
+            <summary>${node.title}</summary>
+            <div style="padding:0 8px 8px 8px;">
+              ${itemRow(node, depth)}
+              ${node.children.map(ch => nodeHtml(ch, depth+1)).join("")}
+            </div>
+          </details>
+        `;
+      }
+
+      return `<div style="padding:0 8px;">${itemRow(node, depth)}</div>`;
+    }
+
+    function itemRow(node, depth, isHome=false){
+      const indent = Math.min(depth, 6) * 10;
+      return `
+        <div class="item" data-id="${node.id}" style="margin-left:${indent}px;">
+          <div class="meta">
+            <div class="t">${node.title}${isHome ? " (Home)" : ""}</div>
+            <div class="s">${node.file}</div>
+          </div>
+          <div class="pill">PDF</div>
+        </div>
+      `;
+    }
+
+    const home = nodes.get(rootId);
+    nav.innerHTML = home ? nodeHtml(home) : `<div style="padding:10px;color:var(--muted);font-size:12px;">No structure loaded.</div>`;
+
+    document.querySelectorAll(".item").forEach(el=>{
+      el.addEventListener("click", ()=> setActive(el.getAttribute("data-id")));
+    });
+
+    if (activeId){
+      const el = document.querySelector(`[data-id="${CSS.escape(activeId)}"]`);
+      if (el) el.classList.add("active");
+    }
+  }
+
+  function setAllDetails(open){
+    document.querySelectorAll("details").forEach(d => d.open = open);
+  }
+
+  function topLevelSections(){
+    return nodes.get(rootId)?.children || [];
+  }
+
+  function goParent(){
+    const n = nodes.get(activeId);
+    if (n?.parentId) setActive(n.parentId);
+  }
+
+  function goHome(){
+    setActive(rootId);
+  }
+
+  // Keyboard shortcuts
+  window.addEventListener("keydown", (e)=>{
+    const tag = (document.activeElement?.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+
+    if (e.key === "/"){
+      e.preventDefault();
+      searchEl.focus();
+      return;
+    }
+    if (e.key.toLowerCase() === "h"){
+      e.preventDefault();
+      goHome();
+      return;
+    }
+    if (e.key === "Backspace"){
+      e.preventDefault();
+      goParent();
+      return;
+    }
+    if (/^[1-9]$/.test(e.key)){
+      const idx = parseInt(e.key, 10) - 1;
+      const secs = topLevelSections();
+      if (secs[idx]){
+        e.preventDefault();
+        setActive(secs[idx].id);
+      }
+    }
+  });
+
+  // Sidebar resize
+  const app = document.getElementById("app");
+  const resizer = document.getElementById("resizer");
+  let dragging = false;
+  resizer.addEventListener("mousedown", ()=> dragging = true);
+  window.addEventListener("mouseup", ()=> dragging = false);
+  window.addEventListener("mousemove", (e)=>{
+    if (!dragging) return;
+    const min=260, max=620;
+    const x = Math.min(max, Math.max(min, e.clientX - 14));
+    app.style.gridTemplateColumns = `${x}px 8px 1fr`;
+  });
+
+  // Init
+  (async function init(){
+    const savedTheme = localStorage.getItem(LS_THEME);
+    if (savedTheme) setTheme(savedTheme);
+
+    themeBtn.onclick = ()=>{
+      const curr = document.body.getAttribute("data-theme") || "dark";
+      setTheme(curr === "dark" ? "light" : "dark");
+    };
+    homeBtn.onclick = goHome;
+    expandAllBtn.onclick = ()=> setAllDetails(true);
+    collapseAllBtn.onclick = ()=> setAllDetails(false);
+    searchEl.addEventListener("input", renderTree);
+
+    const cfg = await loadStructure();
+    buildTreeFromJson(cfg);
+    renderTree();
+
+    const last = localStorage.getItem(LS_LAST);
+    if (last && nodes.has(last)) setActive(last);
+    else goHome();
+  })().catch(err=>{
+    nav.innerHTML = `
+      <div style="padding:12px;color:var(--muted);font-size:12px;">
+        <b style="color:var(--text);">Could not load structure.json.</b><br><br>
+        ${err?.message ? err.message : err}<br><br>
+        Fix: run <span class="kbd">python -m http.server 8000</span> and open
+        <span class="kbd">http://localhost:8000</span>.
+      </div>
+    `;
+  });
+</script>
+</body>
+</html>
